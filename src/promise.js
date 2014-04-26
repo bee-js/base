@@ -14,7 +14,14 @@ define(function() {
     enqueue = function(fn) { setTimeout(fn, 0); }; // TODO: consider use postmessage or message channel or image onload instead
   }
 
-
+  /**
+   * Create new deferred object
+   *
+   * @class
+   * @private
+   *
+   * @params {Promise} [promise]
+   */
   function Deferred(promise) {
     this.promise = promise || new Promise();
 
@@ -27,6 +34,11 @@ define(function() {
   }
 
   Deferred.prototype = {
+    /**
+     * Fulfill promise with given `value`
+     *
+     * @param value Fulfillment value
+     */
     fulfill: function(value) {
       if (this.promise.state === PENDING) {
         this.promise.value = value;
@@ -37,6 +49,11 @@ define(function() {
       return this;
     },
 
+    /**
+     * Reject promise with given `reason`
+     *
+     * @param reason Reason of rejection
+     */
     reject: function(reason) {
       if (this.promise.state === PENDING) {
         this.promise.reason = reason;
@@ -47,6 +64,11 @@ define(function() {
       return this;
     },
 
+    /**
+     * Notify promise about progress change
+     *
+     * @param value Progress value
+     */
     progress: function(value) {
       if (this.promise.state === PENDING) {
         var callbacks = this._handlers.progress,
@@ -60,6 +82,11 @@ define(function() {
       return this;
     },
 
+    /**
+     * Add fulfillment callback
+     *
+     * @param {Function} callback Fulfillment callback
+     */
     success: function(callback) {
       if (callback && this.promise.state === PENDING) {
         this._handlers[FULFILLED].push(callback);
@@ -76,6 +103,11 @@ define(function() {
       return this;
     },
 
+    /**
+     * Add rejection callback
+     *
+     * @param {Function} callback Rejection callback
+     */
     fail: function(callback) {
       if (callback && this.promise.state === PENDING) {
         this._handlers[REJECTED].push(callback);
@@ -92,6 +124,12 @@ define(function() {
       return this;
     },
 
+    /**
+     * Promise A+ 1.1 resolving chain process. Resolves promise relying
+     * on given parent promise state.
+     *
+     * @param x Parent promise
+     */
     resolve: function(x) {
       var self = this;
 
@@ -110,7 +148,16 @@ define(function() {
     }
   };
 
-  function dispatch(deferred, state, val) {
+  /**
+   * Dispatch state corresponding callbacks
+   *
+   * @private
+   *
+   * @param {Deferred} deferred Deferred object which should be dispatched
+   * @param {String}   state    Target state: fulfilled or rejected
+   * @param            value    Fulfillment value or rejection reason
+   */
+  function dispatch(deferred, state, value) {
     var handlers = deferred._handlers[state],
         handler;
 
@@ -119,11 +166,19 @@ define(function() {
     enqueue(function() {
       /*jshint boss:true */
       while(handler = handlers.shift()) {
-        handler(val); // 2.2.5
+        handler(value); // 2.2.5
       }
     });
   }
 
+  /**
+   * Promise A+ 1.1 assimilation.
+   *
+   * @private
+   *
+   * @param {Deferred} dfd Target deferred object
+   * @param            x   Promise which will be assimilated
+   */
   function assimilate(dfd, x) {
     if (x === dfd.promise) { // 2.3.1 - promise and value are the same object
       dfd.reject(new TypeError('Promise can not resolve itself'));
@@ -169,7 +224,7 @@ define(function() {
    * Create a new promise
    *
    * @class
-   * @params {Function} resolver <Function resolve, Function reject>
+   * @params {Function} async resolver <Function resolve, Function reject>
    */
   function Promise(resolver) {
     var deferred = new Deferred(this);
@@ -196,6 +251,25 @@ define(function() {
   Promise.REJECTED  = REJECTED  = 'rejected';
 
   Promise.prototype = {
+
+    /**
+     * Promises A+ `then`. Returns new chained promise which
+     * will be resolved with `onFulfilled` handler or
+     * rejected with `onRejected` handler
+     *
+     *     var promise = new Promise(calculateSomethingAsync);
+     *
+     *     promise.then(function(val) {
+     *       console.log('Result is: ' + val);
+     *     }, function(error) {
+     *       console.warn('Something bad happened: ' + error);
+     *     });
+     *
+     * @param {Function} [onFulfilled] Fulfillment handler
+		 * @param {Function} [onRejected]  Rejection handler
+     *
+     * @returns {Promise}
+     */
     then: function(onFulfilled, onRejected) {
       var promise     = Promise.pending(),
           oldDeferred = this.deferred,
@@ -220,27 +294,58 @@ define(function() {
       return promise;
     },
 
+    /**
+     * Check if promise is pending
+     *
+     * @returns {Boolean}
+     */
     isPending: function() {
       return this.state === PENDING;
     },
 
+    /**
+     * Check if promise was fullfilled
+     *
+     * @returns {Boolean}
+     */
     isFulfilled: function() {
       return this.state === FULFILLED;
     },
 
+    /**
+     * Check if promise was rejected
+     *
+     * @returns {Boolean}
+     */
     isRejected: function() {
       return this.state === REJECTED;
     },
 
+    /**
+     * Return promise value if fulfilled
+     * or reason if rejected
+     */
     result: function() {
       return this.state === REJECTED ? this.reason : this.value;
     }
   };
 
+  /**
+   * Create new, pended promise
+   *
+   * @returns {Promise}
+   */
   Promise.pending = function() {
     return new Promise();
   };
 
+  /**
+   * Create new promise fulfilled with `value`
+   *
+   * @param [value] Value to be fulfilled with
+   *
+   * @returns {Promise}
+   */
   Promise.fulfilled = Promise.resolved = function(value) {
     var deferred = (new Promise()).deferred;
 
@@ -249,6 +354,13 @@ define(function() {
     return deferred.promise;
   };
 
+  /**
+   * Create already rejected promise
+   *
+   * @param [reason] Rejection reason
+   *
+   * @returns {Promise}
+   */
   Promise.rejected = function(reason) {
     var deferred = (new Promise()).deferred;
 
@@ -257,18 +369,45 @@ define(function() {
     return deferred.promise;
   };
 
+  /**
+   * Create deferred object
+   *
+   * @returns {Deferred}
+   */
   Promise.deferred = function() {
     return (new Promise()).deferred;
   };
 
+  /**
+   * Check if given object is trusted promise
+   *
+   * @param obj Object to check
+   *
+   * @returns {Boolean}
+   */
   Promise.isPromise = function(obj) {
     return obj instanceof Promise;
   };
 
+  /**
+   * Return true if given object quacks like promise
+   *
+   * @param obj Object to check
+   *
+   * @returns {Boolean}
+   */
   Promise.isPromiseLike = function(obj) {
     return obj && typeof(obj.then) == 'function';
   };
 
+  /**
+   * Add `then` handlers
+   *
+   * @private
+   *
+   * @param {Deferred} dfd
+   * @param {Function} callback
+   */
   function thenCallback(dfd, callback) {
     var result = function(v) {
       var ret;
