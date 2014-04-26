@@ -1,0 +1,23 @@
+{
+  "author": "Andrey Savchenko",
+  "name": "beejs-base",
+  "version": "0.1.0",
+  "dependencies": {},
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "load-grunt-config": "~0.7.1",
+    "grunt-contrib-watch": "~0.5.3",
+    "grunt-contrib-jshint": "~0.8.0",
+    "jshint-stylish": "~0.1.5",
+    "grunt-mocha": "~0.4.10",
+    "grunt-simple-mocha": "~0.4.0",
+    "amd-loader": "0.0.5",
+    "node-amd-require": "~0.2.2",
+    "chai": "~1.9.1",
+    "sinon": "~1.9.0",
+    "sinon-chai": "~2.5.0"
+  },
+  "scripts": {
+    "test": "grunt ci"
+  }
+}
