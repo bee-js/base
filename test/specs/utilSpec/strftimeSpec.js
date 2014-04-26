@@ -173,20 +173,6 @@ define(['base/util'], function(util) {
         expect(str).to.be.equal('1990');
       });
 
-      it('%z', function() {
-        var date = new Date('May 10, 1986 00:55:00 EST'),
-            str  = util.strftime(date, '%z');
-
-        expect(str).to.be.equal('+03:00');
-      });
-
-      it('%Z', function() {
-        var date = new Date('May 10, 1986 00:55:00 EST'),
-            str  = util.strftime(date, '%Z');
-
-        expect(str).to.be.equal('EEST');
-      });
-
       it('%%', function() {
         var str = util.strftime(date, '%%year');
 
