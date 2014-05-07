@@ -266,7 +266,7 @@ define(function() {
      *     });
      *
      * @param {Function} [onFulfilled] Fulfillment handler
-		 * @param {Function} [onRejected]  Rejection handler
+     * @param {Function} [onRejected]  Rejection handler
      *
      * @returns {Promise}
      */
@@ -398,6 +398,44 @@ define(function() {
    */
   Promise.isPromiseLike = function(obj) {
     return obj && typeof(obj.then) == 'function';
+  };
+
+  /**
+   * Takes an array with promises and returns a promise
+   * which will be fulfilled with an array of results
+   *
+   *     var promise1 = new Promise(function(resolve) { resolve(1); }),
+   *         promise3 = new Promise(function(resolve) { resolve(3); }),
+   *         promise  = new Promise.all([promise1, 'hello', promise3]);
+   *
+   *     promise.then(function(values) {
+   *       console.log(values); //=> [1, 'hello', 3]
+   *     });
+   *
+   * @param {Array} promises List of promises or values
+   *
+   * @returns {Promise}
+   */
+  Promise.all = function(promises) {
+    return new Promise(function(resolve, reject) {
+      var i = -1, l = promises.length,
+          results = [],
+          pending = l;
+
+      function resolver(value, index) {
+        if (Promise.isPromiseLike(value)) {
+          value.then(function(val) {
+            resolver(val, index);
+          }, reject);
+        }
+        results[index] = value;
+        if(--pending === 0) resolve(results);
+      }
+
+      while (++i < l) resolver(promises[i], i);
+
+      if (pending === 0) resolve(results);
+    });
   };
 
   /**

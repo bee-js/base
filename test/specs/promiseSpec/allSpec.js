@@ -11,13 +11,13 @@ define(['base/promise'], function(Promise) {
   describe('.all', function() {
     it('should resolve empty array', function(done) {
       Promise.all(emptyArray).then(function(value) {
-        expect(value).to.be.equal(emptyArray);
+        expect(value).to.be.eql(emptyArray);
       }).then(done, fail);
     });
 
     it('should resolve array of values', function(done) {
       Promise.all(valArray).then(function(values) {
-        expect(values).to.be.equal(valArray);
+        expect(values).to.be.eql(valArray);
       }).then(done, fail);
     });
 
@@ -25,7 +25,7 @@ define(['base/promise'], function(Promise) {
       var arr = [Promise.fulfilled(1), Promise.fulfilled(2), Promise.fulfilled(3)];
 
       Promise.all(arr).then(function(values) {
-        expect(values).to.be.equal([1, 2, 3]);
+        expect(values).to.be.eql([1, 2, 3]);
       }).then(done, fail);
     });
 
@@ -33,7 +33,7 @@ define(['base/promise'], function(Promise) {
       var arr = [1, Promise.fulfilled(2), 3];
 
       Promise.all(arr).then(function(values) {
-        expect(values).to.be.equal([1, 2, 3]);
+        expect(values).to.be.eql([1, 2, 3]);
       }).then(done, fail);
     });
   });
