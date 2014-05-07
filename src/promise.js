@@ -295,6 +295,46 @@ define(function() {
     },
 
     /**
+     * Return a promise which will be fulfilled with
+     * an array of results
+     *
+     *     new Promise(function(fulfill) {
+     *       fulfill([1, another_promise(2), 3]);
+     *     }).all().then(function(values) {
+     *       console.log(values); //=> [1, 2, 3]
+     *     });
+     *
+     * @returns {Array}
+     */
+    all: function() {
+      return this.then(Promise.all);
+    },
+
+    /**
+     * Map an array of a promises or values with
+     * given `iterator` function.
+     *
+     *     var arr = [1, another_promise(2), 3];
+     *
+     *     new Promise(function(fulfill) {
+     *       fulfill([1, another_promise(2), 3]);
+     *     }).map(arr, function(value, index, array) {
+     *       return value * 2;
+     *     }).then(function(values) {
+     *       console.log(values); //=> [2, 4, 6]
+     *     });
+     *
+     * @param {Function} iterator Map function <value, index, originalArray>
+     *
+     * @returns {Promise}
+     */
+    map: function(iterator) {
+      return this.then(function(values) {
+        return Promise.map(values, iterator);
+      });
+    },
+
+    /**
      * Check if promise is pending
      *
      * @returns {Boolean}
@@ -412,13 +452,13 @@ define(function() {
    *       console.log(values); //=> [1, 'hello', 3]
    *     });
    *
-   * @param {Array} promises List of promises or values
+   * @param {Array} values List of promises or values or mixed
    *
    * @returns {Promise}
    */
-  Promise.all = function(promises) {
+  Promise.all = function(values) {
     return new Promise(function(resolve, reject) {
-      var i = -1, len = promises.length,
+      var i = -1, len = values.length,
           results = new Array(len),
           pending = len;
 
@@ -432,19 +472,37 @@ define(function() {
         if(--pending === 0) resolve(results);
       }
 
-      while (++i < len) resolver(promises[i], i);
+      while (++i < len) resolver(values[i], i);
 
       if (pending === 0) resolve(results);
     });
   };
 
-  Promise.map = function(promises, iterator) {
-    return Promise.all(promises).then(function(values) {
-      var len    = values.length,
+  /**
+   * Map an array of a promises or values with
+   * given `iterator` function.
+   *
+   *     var arr = [1, another_promise(2), 3];
+   *
+   *     Promise.map(arr, function(value, index, array) {
+   *       console.log(array); //=> [1, 2, 3]
+   *       return value * index;
+   *     }).then(function(values) {
+   *       console.log(values); //=> [0, 2, 6]
+   *     });
+   *
+   * @param {Array}    values   Array of promises or values or mixed
+   * @param {Function} iterator Map function <value, index, originalArray>
+   *
+   * @returns {Promise}
+   */
+  Promise.map = function(values, iterator) {
+    return Promise.all(values).then(function(fulfillments) {
+      var len    = fulfillments.length,
           result = new Array(len),
           i      = -1;
 
-      while (++i < len) result[i] = iterator(values[i], i, values);
+      while (++i < len) result[i] = iterator(fulfillments[i], i, fulfillments);
 
       return result;
     });

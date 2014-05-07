@@ -50,4 +50,14 @@ define(['base/promise'], function(Promise) {
     });
   });
 
+  describe('#map', function() {
+    it('chains with previous result', function(done) {
+      Promise.fulfilled([1, Promise.fulfilled(2), 3]).map(function(v) {
+        return v * 2;
+      }).then(function(values) {
+        expect(values).to.be.eql([2, 4, 6]);
+      }).then(done, expect.fail);
+    });
+  });
+
 });

@@ -38,4 +38,11 @@ define(['base/promise'], function(Promise) {
     });
   });
 
+  describe('#all', function() {
+    it('chains with previous result', function(done) {
+      Promise.fulfilled([1, Promise.fulfilled(2), 3]).all().then(function(values) {
+        expect(values).to.be.eql(valArray);
+      }).then(done, fail);
+    });
+  });
 });
