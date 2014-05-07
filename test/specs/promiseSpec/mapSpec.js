@@ -34,10 +34,18 @@ define(['base/promise'], function(Promise) {
     it('should map mixed array', function(done) {
       var arr = [1, Promise.fulfilled(2), 3];
 
-      Promise.map(arr, function() {
+      Promise.map(arr, function(v) {
         return v * 3;
       }).then(function(values) {
         expect(values).to.be.eql([3, 6, 9]);
+      }).then(done, expect.fail);
+    });
+
+    it('iterator should pass additional args', function(done) {
+      Promise.map(valArray, function(v, i, array) {
+        return array[i] * i;
+      }).then(function(values) {
+        expect(values).to.be.eql([0, 2, 6]);
       }).then(done, expect.fail);
     });
   });

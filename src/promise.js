@@ -418,9 +418,9 @@ define(function() {
    */
   Promise.all = function(promises) {
     return new Promise(function(resolve, reject) {
-      var i = -1, l = promises.length,
-          results = [],
-          pending = l;
+      var i = -1, len = promises.length,
+          results = new Array(len),
+          pending = len;
 
       function resolver(value, index) {
         if (Promise.isPromiseLike(value)) {
@@ -432,9 +432,21 @@ define(function() {
         if(--pending === 0) resolve(results);
       }
 
-      while (++i < l) resolver(promises[i], i);
+      while (++i < len) resolver(promises[i], i);
 
       if (pending === 0) resolve(results);
+    });
+  };
+
+  Promise.map = function(promises, iterator) {
+    return Promise.all(promises).then(function(values) {
+      var len    = values.length,
+          result = new Array(len),
+          i      = -1;
+
+      while (++i < len) result[i] = iterator(values[i], i, values);
+
+      return result;
     });
   };
 
